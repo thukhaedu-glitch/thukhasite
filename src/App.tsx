@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { 
   TrendingUp, Bot, Zap, Globe, Award, Linkedin, Mail, FileText, 
   LayoutGrid, Laptop, CheckCircle, ChevronRight, Code, MessageSquare, 
@@ -7,11 +7,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-// Import our interactive mockup components
-import PricingCalculator from './components/PricingCalculator';
-import SeoGrader from './components/SeoGrader';
-import KpiDashboard from './components/KpiDashboard';
-import EventTimeline from './components/EventTimeline';
+const PricingCalculator = lazy(() => import('./components/PricingCalculator'));
+const SeoGrader = lazy(() => import('./components/SeoGrader'));
+const KpiDashboard = lazy(() => import('./components/KpiDashboard'));
+const EventTimeline = lazy(() => import('./components/EventTimeline'));
 
 import { Project, BlogPost } from './types';
 import { usePortfolioContent } from './content';
@@ -274,8 +273,12 @@ export default function App() {
                 
                 {/* Professional portrait */}
                 <img
-                  src="/thukha-aung-profile.png"
+                  src="/thukha-aung-profile.webp"
                   alt="Thukha Aung — Growth and Ecommerce Specialist"
+                  width="576"
+                  height="576"
+                  fetchPriority="high"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-cover object-center z-10 transition-transform duration-700 group-hover:scale-[1.02]"
                 />
                 <div className="absolute inset-0 z-[11] bg-gradient-to-t from-slate-950/35 via-transparent to-slate-950/10 pointer-events-none" />
@@ -550,10 +553,12 @@ export default function App() {
                     )}
                   </div>
                 )}
-                {activeMockType === 'pricing-calculator' && <PricingCalculator />}
-                {activeMockType === 'seo-grader' && <SeoGrader />}
-                {activeMockType === 'kpi-dashboard' && <KpiDashboard />}
-                {activeMockType === 'event-timeline' && <EventTimeline />}
+                <Suspense fallback={<div className="min-h-[260px] animate-pulse rounded-xl bg-slate-900/60" />}>
+                  {activeMockType === 'pricing-calculator' && <PricingCalculator />}
+                  {activeMockType === 'seo-grader' && <SeoGrader />}
+                  {activeMockType === 'kpi-dashboard' && <KpiDashboard />}
+                  {activeMockType === 'event-timeline' && <EventTimeline />}
+                </Suspense>
               </div>
             </div>
 
