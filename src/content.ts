@@ -54,13 +54,13 @@ const isFirebaseConfigured = [
 ].every(Boolean);
 
 const fallbackContent: PortfolioContent = {
-  projects: projectsData,
+  projects: [],
   creativeItems: creativeItemsData,
   websites: websitesData,
   ventures: venturesData,
   volunteering: volunteeringData,
   certifications: certificationsData,
-  blogPosts: blogPostsData,
+  blogPosts: [],
   settings: defaultSiteSettings,
   loading: false,
 };
