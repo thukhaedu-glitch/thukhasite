@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-brand-purple: #2563eb; /* Map legacy purple variable to Royal Blue */
+  --color-brand-emerald: #10b981; /* High quality emerald green accent */
+  --color-brand-teal: #14b8a6;
+  --color-brand-border: #1e293b; /* Dark slate slate border */
+  --color-brand-card: #0e1422;   /* Premium dark-slate card background */
+}
+
+@layer base {
+  body {
+    background-color: #080c14; /* Deep premium blue-gray background matching screenshot */
+    color: #cbd5e1; /* Elegant cool slate text */
+    overflow-x: hidden;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar matching new cool palette */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080c14;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 15px rgba(37, 99, 235, 0.25);
+  }
+  
+  .border-glow:hover {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.12);
+    border-color: rgba(37, 99, 235, 0.3);
+  }
+}
