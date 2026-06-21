@@ -1,14 +1,4 @@
-import { useEffect, useState } from "react";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
-
-import { db, isFirebaseConfigured } from "./firebase";
-
+import { useEffect, useState } from 'react';
 import {
   blogPostsData,
   certificationsData,
@@ -17,8 +7,7 @@ import {
   venturesData,
   volunteeringData,
   websitesData,
-} from "./data";
-
+} from './data';
 import {
   BlogPost,
   BusinessVenture,
@@ -28,30 +17,18 @@ import {
   SiteSettings,
   VolunteeringExp,
   WebsiteShowcase,
-} from "./types";
+} from './types';
 
 export const defaultSiteSettings: SiteSettings = {
-  id: "main",
-  siteName: "Thukha Aung — Growth & Ecommerce Specialist",
-  tagline:
-    "Growth, ecommerce operations, performance marketing and digital experiences.",
-  author: "Thukha Aung",
-  siteUrl: "https://thukhaaung.me",
-  seoTitle: "Thukha Aung | Growth & Ecommerce Specialist",
+  id: 'main',
+  siteName: 'Thukha Aung — Growth & Ecommerce Specialist',
+  tagline: 'Growth, ecommerce operations, performance marketing and digital experiences.',
+  author: 'Thukha Aung',
+  siteUrl: 'https://thukhaaung.com',
+  seoTitle: 'Thukha Aung | Growth & Ecommerce Specialist',
   seoDescription:
-    "Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC and performance marketing.",
-  seoKeywords: [
-    "Thukha Aung",
-    "digital Marekting Yangon",
-    "thukha aung",
-  "thukha",
-  "thu kha",
-    "growth specialist",
-    "ecommerce specialist",
-    "Amazon UAE",
-    "Noon GCC",
-    "performance marketing",
-  ],
+    'Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC, performance marketing and digital experiences.',
+  seoKeywords: ['growth specialist', 'ecommerce specialist', 'Amazon UAE', 'Noon GCC', 'performance marketing'],
 };
 
 export interface PortfolioContent {
@@ -66,6 +43,15 @@ export interface PortfolioContent {
   loading: boolean;
 }
 
+const isFirebaseConfigured = [
+  import.meta.env.VITE_FIREBASE_API_KEY,
+  import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  import.meta.env.VITE_FIREBASE_APP_ID,
+].every(Boolean);
+
 const fallbackContent: PortfolioContent = {
   projects: projectsData,
   creativeItems: creativeItemsData,
@@ -78,12 +64,8 @@ const fallbackContent: PortfolioContent = {
   loading: false,
 };
 
-function sortItems<T extends { order?: number }>(items: T[]) {
-  return [...items].sort(
-    (first, second) =>
-      (first.order ?? 999) - (second.order ?? 999),
-  );
-}
+const sortLocally = <T extends { order?: number }>(items: T[]) =>
+  [...items].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
 export function usePortfolioContent(): PortfolioContent {
   const [content, setContent] = useState<PortfolioContent>({
@@ -92,123 +74,74 @@ export function usePortfolioContent(): PortfolioContent {
   });
 
   useEffect(() => {
-    if (!db) return;
-
     const subscriptions: Array<() => void> = [];
+    let cancelled = false;
 
-    function connectCollection<
-      T extends {
-        id: string;
-        published?: boolean;
-        order?: number;
-      },
-    >(
-      collectionName: string,
-      stateKey: keyof Omit<
-        PortfolioContent,
-        "settings" | "loading"
-      >,
-    ) {
-      const contentQuery = query(
-        collection(db!, collectionName),
-        where("published", "==", true),
-      );
+    const connect = async () => {
+      if (!isFirebaseConfigured) return;
+      const [{ db }, firestore] = await Promise.all([
+        import('./firebase'),
+        import('firebase/firestore'),
+      ]);
+      if (!db || cancelled) return;
 
-      const unsubscribe = onSnapshot(
-        contentQuery,
-
-        (snapshot) => {
-          const items = snapshot.docs.map((document) => ({
-            id: document.id,
-            ...document.data(),
-          })) as T[];
-
-          setContent((current) => ({
-            ...current,
-            [stateKey]: sortItems(items),
-            loading: false,
-          }));
-        },
-
-        (error) => {
-          console.warn(
-            `Unable to load ${collectionName}. Using fallback content.`,
-            error,
-          );
-
-          setContent((current) => ({
-            ...current,
-            loading: false,
-          }));
-        },
-      );
-
-      subscriptions.push(unsubscribe);
-    }
-
-    connectCollection<Project>("projects", "projects");
-
-    connectCollection<CreativeItem>(
-      "creativeItems",
-      "creativeItems",
-    );
-
-    connectCollection<WebsiteShowcase>(
-      "websites",
-      "websites",
-    );
-
-    connectCollection<BusinessVenture>(
-      "ventures",
-      "ventures",
-    );
-
-    connectCollection<VolunteeringExp>(
-      "volunteering",
-      "volunteering",
-    );
-
-    connectCollection<Certification>(
-      "certifications",
-      "certifications",
-    );
-
-    connectCollection<BlogPost>(
-      "blogPosts",
-      "blogPosts",
-    );
-
-    const settingsUnsubscribe = onSnapshot(
-      doc(db, "siteSettings", "main"),
-
-      (snapshot) => {
-        if (!snapshot.exists()) return;
-
-        setContent((current) => ({
-          ...current,
-          settings: {
-            ...defaultSiteSettings,
-            ...snapshot.data(),
-            id: "main",
-          } as SiteSettings,
-          loading: false,
-        }));
-      },
-
-      (error) => {
-        console.warn(
-          "Unable to load global site settings.",
-          error,
+      const { collection, doc, onSnapshot, query, where } = firestore;
+      const bindCollection = <T extends { id: string; published?: boolean; order?: number }>(
+        collectionName: string,
+        key: keyof Omit<PortfolioContent, 'settings' | 'loading'>,
+      ) => {
+        const contentQuery = query(collection(db, collectionName), where('published', '==', true));
+        subscriptions.push(
+          onSnapshot(
+            contentQuery,
+            (snapshot) => {
+              const items = snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as T[];
+              setContent((current) => ({ ...current, [key]: sortLocally(items), loading: false }));
+            },
+            (error) => {
+              console.warn(`Unable to load ${collectionName}; using bundled fallback content.`, error);
+              setContent((current) => ({ ...current, loading: false }));
+            },
+          ),
         );
-      },
-    );
+      };
 
-    subscriptions.push(settingsUnsubscribe);
+      bindCollection<Project>('projects', 'projects');
+      bindCollection<CreativeItem>('creativeItems', 'creativeItems');
+      bindCollection<WebsiteShowcase>('websites', 'websites');
+      bindCollection<BusinessVenture>('ventures', 'ventures');
+      bindCollection<VolunteeringExp>('volunteering', 'volunteering');
+      bindCollection<Certification>('certifications', 'certifications');
+      bindCollection<BlogPost>('blogPosts', 'blogPosts');
+
+      subscriptions.push(
+        onSnapshot(
+          doc(db, 'siteSettings', 'main'),
+          (snapshot) => {
+            if (snapshot.exists()) {
+              setContent((current) => ({
+                ...current,
+                settings: { ...defaultSiteSettings, ...snapshot.data(), id: 'main' },
+                loading: false,
+              }));
+            }
+          },
+          (error) => console.warn('Unable to load site settings.', error),
+        ),
+      );
+    };
+
+    const connectTimer = window.setTimeout(() => {
+      connect().catch((error) => {
+        console.warn('Unable to initialize Firebase; using bundled content.', error);
+        setContent((current) => ({ ...current, loading: false }));
+      });
+    }, 1200);
 
     return () => {
-      subscriptions.forEach((unsubscribe) =>
-        unsubscribe(),
-      );
+      cancelled = true;
+      window.clearTimeout(connectTimer);
+      subscriptions.forEach((unsubscribe) => unsubscribe());
     };
   }, []);
 
