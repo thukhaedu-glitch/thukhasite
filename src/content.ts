@@ -36,7 +36,7 @@ export const defaultSiteSettings: SiteSettings = {
   tagline:
     "Growth, ecommerce operations, performance marketing and digital experiences.",
   author: "Thukha Aung",
-  siteUrl: "https://YOUR-DOMAIN.vercel.app",
+  siteUrl: "https://thukhaaung.me",
   seoTitle: "Thukha Aung | Growth & Ecommerce Specialist",
   seoDescription:
     "Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC and performance marketing.",
