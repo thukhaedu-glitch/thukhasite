@@ -15,6 +15,7 @@ export interface CmsFields extends SeoFields {
 
 export interface Project extends CmsFields {
   id: string;
+  slug?: string;
   title: string;
   subtitle: string;
   market: string;
@@ -29,13 +30,14 @@ export interface Project extends CmsFields {
 
 export interface CreativeItem extends CmsFields {
   id: string;
-  category: "graphics" | "motion" | "photography" | "social";
+  category: 'graphics' | 'motion' | 'photography' | 'social';
   title: string;
   subtitle: string;
   imageUrl: string;
-  videoUrl?: string;
-  embedType?: "css-animated" | "image" | "video-mock";
+  galleryImages?: string[];
+  embedType?: 'css-animated' | 'image' | 'video-mock';
   techUsed?: string[];
+  videoUrl?: string;
 }
 
 export interface WebsiteShowcase extends CmsFields {
@@ -44,11 +46,7 @@ export interface WebsiteShowcase extends CmsFields {
   tagline: string;
   description: string;
   tech: string[];
-  mockType:
-    | "pricing-calculator"
-    | "seo-grader"
-    | "kpi-dashboard"
-    | "event-timeline";
+  mockType: 'pricing-calculator' | 'seo-grader' | 'kpi-dashboard' | 'event-timeline';
   caseStudy: string;
   imageUrl?: string;
   liveUrl?: string;
@@ -58,7 +56,7 @@ export interface BusinessVenture extends CmsFields {
   id: string;
   title: string;
   type: string;
-  tag: "Ecommerce" | "SaaS" | "Digital Product" | "Concept";
+  tag: 'Ecommerce' | 'SaaS' | 'Digital Product' | 'Concept';
   metrics: string;
   description: string;
   investmentRequired?: string;
@@ -97,7 +95,7 @@ export interface BlogPost extends CmsFields {
 }
 
 export interface SiteSettings extends SeoFields {
-  id: "main";
+  id: 'main';
   siteName: string;
   tagline: string;
   author: string;
