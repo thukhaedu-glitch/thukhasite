@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { ArrowLeft, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 import { usePortfolioContent } from '../content';
 import { useSeo } from '../seo';
 import { BlogContentBlock, BlogPost, Project, SeoFields } from '../types';
@@ -75,6 +76,7 @@ function StructuredContent({ blocks }: { blocks: BlogContentBlock[] }) {
 }
 
 export default function ContentPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { blogPosts, projects, settings, loading } = usePortfolioContent();
   const path = window.location.pathname.replace(/\/+$/, '');
   const blogSlug = path.startsWith('/blog/') ? decodeURIComponent(path.slice('/blog/'.length)) : '';
@@ -159,13 +161,71 @@ export default function ContentPage() {
 
   return (
     <div className="min-h-screen bg-[#080c14] text-slate-300">
-      <header className="border-b border-slate-800/80 bg-[#080c14]/95">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <a href="/" className="font-bold tracking-tight text-white">THUKHA AUNG</a>
-          <a href="/" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white">
-            <ArrowLeft size={14} /> Portfolio
+      <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#080c14]/95 backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
+          <a href="/" className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-xs font-bold text-white">
+              TA
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-[#080c14]" />
+            </div>
+            <div>
+              <span className="block text-sm font-extrabold leading-none tracking-tight text-white">THUKHA AUNG</span>
+              <span className="mt-1 block text-[9px] font-bold uppercase tracking-widest text-emerald-500">Growth Specialist</span>
+            </div>
           </a>
+
+          <nav className="hidden items-center gap-1 lg:flex">
+            {[
+              ['Home', '/#home'],
+              ['About Specialist', '/#about'],
+              ['Works & Sandbox', '/#projects'],
+              ['Creative Studio', '/#creative'],
+              ['Noble Impact', '/#volunteering'],
+              ['Intel Blog', '/#blog'],
+              ['Get In Touch', '/#contact'],
+            ].map(([label, href]) => (
+              <a key={href} href={href} className="rounded-full px-3.5 py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-white">
+                {label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-3 sm:flex">
+            <a href="/#contact" className="rounded-full bg-blue-600 px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-blue-500">
+              Let&apos;s Work Together
+            </a>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            className="rounded-lg border border-slate-800 p-2 text-slate-300 lg:hidden"
+          >
+            {mobileMenuOpen ? <X size={19} /> : <Menu size={19} />}
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <nav className="border-t border-slate-800 bg-[#0b111e] px-6 py-4 lg:hidden">
+            <div className="mx-auto grid max-w-7xl gap-1">
+              {[
+                ['Home', '/#home'],
+                ['About Specialist', '/#about'],
+                ['Works & Sandbox', '/#projects'],
+                ['Creative Studio', '/#creative'],
+                ['Noble Impact', '/#volunteering'],
+                ['Intel Blog', '/#blog'],
+                ['Get In Touch', '/#contact'],
+              ].map(([label, href]) => (
+                <a key={href} href={href} className="rounded-lg px-3 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white">
+                  {label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
       </header>
 
       {blogPost ? <BlogArticle post={blogPost} /> : <CaseStudy project={project!} />}
