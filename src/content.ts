@@ -42,7 +42,7 @@ export const defaultSiteSettings: SiteSettings = {
     "Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC and performance marketing.",
   seoKeywords: [
     "Thukha Aung",
-    "digital Marekting Yangon"
+    "digital Marekting Yangon",
     "thukha aung",
   "thukha",
   "thu kha",
