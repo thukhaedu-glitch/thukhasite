@@ -81,6 +81,13 @@ export interface Certification extends CmsFields {
   accent: string;
 }
 
+export interface BlogContentBlock {
+  id: string;
+  type: 'heading' | 'paragraph' | 'image';
+  content: string;
+  alt?: string;
+}
+
 export interface BlogPost extends CmsFields {
   id: string;
   title: string;
@@ -90,6 +97,10 @@ export interface BlogPost extends CmsFields {
   date: string;
   category: string;
   content: string;
+  contentBlocks?: BlogContentBlock[];
+  authorName?: string;
+  authorPhoto?: string;
+  relatedService?: string;
   coverImage?: string;
   videoUrl?: string;
 }
