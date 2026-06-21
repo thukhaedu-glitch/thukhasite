@@ -484,7 +484,7 @@ export default function App() {
                     </span>
                   </div>
                   <a 
-                    href={`/case-study/${encodeURIComponent(project.id)}`}
+                    href={`/case-study/${encodeURIComponent(project.slug || project.id)}`}
                     className="text-[10px] font-mono font-bold uppercase text-white hover:text-brand-emerald transition-colors flex items-center space-x-1 p-1 focus:outline-none"
                   >
                     <span>Read Study</span>
@@ -633,7 +633,21 @@ export default function App() {
                       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f1626_1px,transparent_1px),linear-gradient(to_bottom,#0f1626_1px,transparent_1px)] bg-[size:1rem_1rem] opacity-25 z-0" />
                       
                       {/* CATEGORY & EMBED CONDITIONAL RENDERERS */}
-                      {item.category === 'motion' && item.videoUrl ? (
+                      {item.galleryImages && item.galleryImages.length > 1 ? (
+                        <div className="absolute inset-0 z-10 grid grid-cols-2 gap-1 bg-slate-950 p-1">
+                          {item.galleryImages.slice(0, 4).map((imageUrl, imageIndex) => (
+                            <img
+                              key={imageUrl}
+                              src={imageUrl}
+                              alt={`${item.title} gallery image ${imageIndex + 1}`}
+                              loading="lazy"
+                              width="600"
+                              height="600"
+                              className="h-full w-full min-h-0 object-cover"
+                            />
+                          ))}
+                        </div>
+                      ) : item.category === 'motion' && item.videoUrl ? (
                         <video
                           src={item.videoUrl}
                           poster={item.imageUrl?.startsWith('http') ? item.imageUrl : undefined}
@@ -642,9 +656,9 @@ export default function App() {
                           preload="metadata"
                           className="absolute inset-0 h-full w-full object-cover z-10"
                         />
-                      ) : item.imageUrl?.startsWith('http') ? (
+                      ) : (item.galleryImages?.[0] || item.imageUrl)?.startsWith('http') ? (
                         <img
-                          src={item.imageUrl}
+                          src={item.galleryImages?.[0] || item.imageUrl}
                           alt={item.title}
                           loading="lazy"
                           className="absolute inset-0 h-full w-full object-cover z-10"
