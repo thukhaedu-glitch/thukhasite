@@ -272,32 +272,13 @@ export default function App() {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(16,185,129,0.06),transparent_70%)]" />
                 <div className="absolute top-8 right-8 w-32 h-32 bg-blue-600/5 rounded-full filter blur-2xl transition-all duration-700" />
                 
-                {/* Stylized Avatar Silhouette representing Thukha Aung */}
-                <svg className="w-10/12 h-5/6 text-slate-800 z-10 transition-transform duration-700 group-hover:scale-[1.02]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="45" r="32" fill="url(#avatarGlow)" opacity="0.25" />
-                  <path d="M15 95 C15 70, 30 65, 50 65 C70 65, 85 70, 85 95 Z" fill="url(#shirtdark)" />
-                  <path d="M42 63 L50 71 L58 63 L50 60 Z" fill="#0b0b0d" />
-                  <path d="M35 32 C35 22, 40 18, 50 18 C60 18, 65 22, 65 32 C65 44, 58 48, 50 48 C42 48, 35 44, 35 32 Z" fill="#e9be9f" />
-                  <path d="M32 28 C32 18, 42 12, 50 13 C58 12, 68 18, 68 28 C68 24, 64 16, 50 16 C36 16, 32 24, 32 28 Z" fill="#141416" />
-                  <path d="M33 30 C33 22, 38 18, 50 18 C62 18, 67 22, 67 30 C64 26, 61 22, 50 22 C39 22, 36 26, 33 30 Z" fill="#1c1c1f" />
-                  <path d="M34 30 C32 30, 32 36, 35 36 Z" fill="#ddaa87" />
-                  <path d="M66 30 C68 30, 68 36, 65 36 Z" fill="#ddaa87" />
-                  <path d="M38 29 H48 L46 33 H39 Z" stroke="#475569" strokeWidth="1.2" fill="rgba(255,255,255,0.03)" />
-                  <path d="M52 29 H62 L61 33 H54 Z" stroke="#475569" strokeWidth="1.2" fill="rgba(255,255,255,0.03)" />
-                  <path d="M48 30 H52" stroke="#475569" strokeWidth="1.2" />
-                  
-                  <defs>
-                    <radialGradient id="avatarGlow" cx="50" cy="45" r="32" fx="50" fy="45" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-                    </radialGradient>
-                    <linearGradient id="shirtdark" x1="15" y1="80" x2="85" y2="80" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#0f172a" />
-                      <stop offset="50%" stopColor="#1e293b" />
-                      <stop offset="100%" stopColor="#0f172a" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+                {/* Professional portrait */}
+                <img
+                  src="/thukha-aung-profile.png"
+                  alt="Thukha Aung — Growth and Ecommerce Specialist"
+                  className="absolute inset-0 h-full w-full object-cover object-center z-10 transition-transform duration-700 group-hover:scale-[1.02]"
+                />
+                <div className="absolute inset-0 z-[11] bg-gradient-to-t from-slate-950/35 via-transparent to-slate-950/10 pointer-events-none" />
 
                 {/* Overlaid Growth KPI Cards */}
                 <div className="absolute top-6 left-6 bg-slate-900/90 border border-slate-800 p-3 rounded-lg shadow-xl backdrop-blur-md z-20 space-y-0.5 pointer-events-none">
