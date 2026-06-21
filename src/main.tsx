@@ -1,18 +1,19 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import {lazy, StrictMode, Suspense} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
 
-import App from "./App";
-import AdminPanel from "./components/AdminPanel";
-import "./index.css";
+const isAdminRoute = window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/');
+const AdminPanel = lazy(() => import('./components/AdminPanel.tsx'));
 
-const isAdminPage =
-  window.location.pathname === "/admin" ||
-  window.location.pathname.startsWith("/admin/");
-
-createRoot(
-  document.getElementById("root")!,
-).render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {isAdminPage ? <AdminPanel /> : <App />}
+    {isAdminRoute ? (
+      <Suspense fallback={<div className="min-h-screen bg-[#080c14]" />}>
+        <AdminPanel />
+      </Suspense>
+    ) : (
+      <App />
+    )}
   </StrictMode>,
 );
