@@ -29,6 +29,7 @@ export const defaultSiteSettings: SiteSettings = {
   seoDescription:
     'Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC, performance marketing and digital experiences.',
   seoKeywords: ['growth specialist', 'ecommerce specialist', 'Amazon UAE', 'Noon GCC', 'performance marketing'],
+  defaultOgImage: 'https://www.thukhaaung.me/social-share.webp',
 };
 
 export interface PortfolioContent {
