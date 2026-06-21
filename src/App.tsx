@@ -13,10 +13,20 @@ import SeoGrader from './components/SeoGrader';
 import KpiDashboard from './components/KpiDashboard';
 import EventTimeline from './components/EventTimeline';
 
-import { Project, WebsiteShowcase, CreativeItem, BlogPost } from './types';
-import { projectsData, volunteeringData, certificationsData, websitesData, creativeItemsData, blogPostsData } from './data';
+import { Project, BlogPost } from './types';
+import { usePortfolioContent } from './content';
+import { useSeo } from './seo';
 
 export default function App() {
+  const {
+    projects: projectsData,
+    volunteering: volunteeringData,
+    certifications: certificationsData,
+    websites: websitesData,
+    creativeItems: creativeItemsData,
+    blogPosts: blogPostsData,
+    settings,
+  } = usePortfolioContent();
   // Navigation active state
   const [activeTab, setActiveTab] = useState('home');
   // Selected project for case study modal
@@ -33,6 +43,8 @@ export default function App() {
   const [playingMotionId, setPlayingMotionId] = useState<string | null>(null);
   // Simulated video playback cycle state (0 to 100 percent)
   const [videoPlaybackProgress, setVideoPlaybackProgress] = useState<{ [key: string]: number }>({});
+  useSeo(settings, selectedBlogPost || selectedProject || undefined);
+  const activeWebsite = websitesData.find((website) => website.mockType === activeMockType);
 
   useEffect(() => {
     if (cvToast) {
@@ -451,6 +463,14 @@ export default function App() {
                 key={project.id}
                 className="bg-[#0e1422] p-6 rounded-2xl border border-slate-800/85 flex flex-col justify-between hover:border-blue-500/30 hover:bg-[#121a2d] transition-all relative group shadow-lg"
               >
+                {project.coverImage && (
+                  <img
+                    src={project.coverImage}
+                    alt={project.title}
+                    loading="lazy"
+                    className="w-full h-36 object-cover rounded-xl mb-5 border border-slate-800"
+                  />
+                )}
                 <div className="absolute top-4 right-4 text-[9px] font-mono bg-blue-600/10 text-white font-semibold border border-blue-500/20 rounded px-2 py-0.5 uppercase">
                   {project.market}
                 </div>
@@ -501,12 +521,7 @@ export default function App() {
               
               {/* Sandbox Tab selectors */}
               <div className="flex bg-[#0a0f1d] p-1 rounded-lg border border-slate-800/80 w-fit">
-                {[
-                  { mockType: 'pricing-calculator', label: 'UAE Price Repricer' },
-                  { mockType: 'seo-grader', label: 'Amazon Keyword Grader' },
-                  { mockType: 'kpi-dashboard', label: 'ACoS Dashboard' },
-                  { mockType: 'event-timeline', label: 'UNICEF Timeline' },
-                ].map((tab) => (
+                {websitesData.map((tab) => (
                   <button
                     key={tab.mockType}
                     onClick={() => setActiveMockType(tab.mockType as any)}
@@ -516,7 +531,7 @@ export default function App() {
                         : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {tab.label}
+                    {tab.title}
                   </button>
                 ))}
               </div>
@@ -538,6 +553,22 @@ export default function App() {
 
               {/* Dynamic Sandbox Display */}
               <div className="min-h-[280px] flex flex-col justify-center">
+                {activeWebsite && (
+                  <div className="mb-5 px-2">
+                    <h3 className="text-sm font-bold text-white">{activeWebsite.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1">{activeWebsite.description}</p>
+                    {activeWebsite.liveUrl && (
+                      <a
+                        href={activeWebsite.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block text-[10px] font-mono text-emerald-400 mt-2"
+                      >
+                        Open live experience ↗
+                      </a>
+                    )}
+                  </div>
+                )}
                 {activeMockType === 'pricing-calculator' && <PricingCalculator />}
                 {activeMockType === 'seo-grader' && <SeoGrader />}
                 {activeMockType === 'kpi-dashboard' && <KpiDashboard />}
@@ -616,7 +647,23 @@ export default function App() {
                       <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f1626_1px,transparent_1px),linear-gradient(to_bottom,#0f1626_1px,transparent_1px)] bg-[size:1rem_1rem] opacity-25 z-0" />
                       
                       {/* CATEGORY & EMBED CONDITIONAL RENDERERS */}
-                      {item.category === 'motion' ? (
+                      {item.category === 'motion' && item.videoUrl ? (
+                        <video
+                          src={item.videoUrl}
+                          poster={item.imageUrl?.startsWith('http') ? item.imageUrl : undefined}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="absolute inset-0 h-full w-full object-cover z-10"
+                        />
+                      ) : item.imageUrl?.startsWith('http') ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover z-10"
+                        />
+                      ) : item.category === 'motion' ? (
                         /* PREMIUM SIMULATED MOTION VIDEO PLAYER FRAME */
                         <div className="w-full h-full p-4 flex flex-col justify-between relative z-10 select-none">
                           <div className="flex justify-between items-center text-[9px] font-mono">
@@ -909,6 +956,14 @@ export default function App() {
                 key={post.id} 
                 className="bg-[#0e1422] p-6 sm:p-7 rounded-2xl border border-slate-800/90 flex flex-col justify-between hover:border-blue-500/20 hover:bg-[#121a2d] transition-all group shadow-md"
               >
+                {post.coverImage && (
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    loading="lazy"
+                    className="w-full h-44 object-cover rounded-xl mb-5 border border-slate-800"
+                  />
+                )}
                 <div className="space-y-4 text-left">
                   <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
                     <span className="bg-slate-900 border border-slate-800/80 px-2 py-0.5 rounded text-[#10b981] font-bold">
@@ -1113,6 +1168,13 @@ export default function App() {
                 &quot;{selectedProject.subtitle}&quot;
               </p>
 
+              {selectedProject.coverImage && (
+                <img src={selectedProject.coverImage} alt={selectedProject.title} className="w-full rounded-xl border border-slate-800" />
+              )}
+              {selectedProject.videoUrl && (
+                <video src={selectedProject.videoUrl} controls playsInline className="w-full rounded-xl border border-slate-800" />
+              )}
+
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left">
                 <span className="text-[10px] font-mono text-slate-500 block uppercase font-bold">Validated Value metrics</span>
                 <div className="text-base font-bold font-mono text-[#10b981] mt-0.5">{selectedProject.stats}</div>
@@ -1193,6 +1255,13 @@ export default function App() {
                   {selectedBlogPost.title}
                 </h3>
               </div>
+
+              {selectedBlogPost.coverImage && (
+                <img src={selectedBlogPost.coverImage} alt={selectedBlogPost.title} className="w-full rounded-xl border border-slate-800" />
+              )}
+              {selectedBlogPost.videoUrl && (
+                <video src={selectedBlogPost.videoUrl} controls playsInline className="w-full rounded-xl border border-slate-800" />
+              )}
 
               {/* Render Block dynamically parsing the custom Markdown elements cleanly and beautifully */}
               <div className="text-xs sm:text-sm text-slate-300 space-y-5 leading-relaxed text-left border-t border-slate-800/80 pt-6">
