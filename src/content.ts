@@ -24,7 +24,7 @@ export const defaultSiteSettings: SiteSettings = {
   siteName: 'Thukha Aung — Growth & Ecommerce Specialist',
   tagline: 'Growth, ecommerce operations, performance marketing and digital experiences.',
   author: 'Thukha Aung',
-  siteUrl: 'https://thukhaaung.com',
+  siteUrl: 'https://www.thukhaaung.me/',
   seoTitle: 'Thukha Aung | Growth & Ecommerce Specialist',
   seoDescription:
     'Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC, performance marketing and digital experiences.',
