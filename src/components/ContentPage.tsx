@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ArrowLeft, CheckCircle, Clock } from 'lucide-react';
 import { usePortfolioContent } from '../content';
 import { useSeo } from '../seo';
-import { BlogPost, Project, SeoFields } from '../types';
+import { BlogContentBlock, BlogPost, Project, SeoFields } from '../types';
 
 const SITE_URL = 'https://www.thukhaaung.me';
 
@@ -53,6 +53,27 @@ function renderInline(text: string) {
   );
 }
 
+function StructuredContent({ blocks }: { blocks: BlogContentBlock[] }) {
+  return (
+    <div className="space-y-7 text-sm leading-7 text-slate-300 sm:text-base">
+      {blocks.map((block) => {
+        if (block.type === 'heading') {
+          return <h2 key={block.id} className="pt-4 text-2xl font-bold text-white">{block.content}</h2>;
+        }
+        if (block.type === 'image') {
+          return (
+            <figure key={block.id} className="space-y-2">
+              <img src={block.content} alt={block.alt || 'Article illustration'} loading="lazy" width="1200" height="800" className="w-full rounded-2xl border border-slate-800 object-cover" />
+              {block.alt && <figcaption className="text-center text-xs text-slate-500">{block.alt}</figcaption>}
+            </figure>
+          );
+        }
+        return <p key={block.id}>{renderInline(block.content)}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function ContentPage() {
   const { blogPosts, projects, settings, loading } = usePortfolioContent();
   const path = window.location.pathname.replace(/\/+$/, '');
@@ -61,9 +82,13 @@ export default function ContentPage() {
     ? decodeURIComponent(path.slice('/case-study/'.length))
     : '';
   const blogPost = blogPosts.find((post) => post.slug === blogSlug);
-  const project = projects.find((item) => item.id === projectId);
+  const project = projects.find((item) => (item.slug || item.id) === projectId);
   const item = blogPost || project;
-  const canonicalPath = blogPost ? `/blog/${blogPost.slug}` : project ? `/case-study/${project.id}` : path;
+  const canonicalPath = blogPost
+    ? `/blog/${blogPost.slug}`
+    : project
+      ? `/case-study/${project.slug || project.id}`
+      : path;
   const pageSeo: SeoFields = item
     ? {
         seoTitle: item.seoTitle || `${item.title} | Thukha Aung`,
@@ -110,7 +135,7 @@ export default function ContentPage() {
             description: project!.subtitle,
             author: { '@type': 'Person', name: settings.author, url: settings.siteUrl },
             image: project!.coverImage || settings.defaultOgImage,
-            url: `${SITE_URL}/case-study/${project!.id}`,
+            url: `${SITE_URL}/case-study/${project!.slug || project!.id}`,
           },
     );
     document.head.appendChild(schema);
@@ -164,12 +189,23 @@ function BlogArticle({ post }: { post: BlogPost }) {
         </div>
         <h1 className="text-3xl font-bold leading-tight text-white sm:text-5xl">{post.title}</h1>
         <p className="mt-6 text-base leading-7 text-slate-400 sm:text-lg">{post.excerpt}</p>
+        {(post.authorName || post.authorPhoto) && (
+          <div className="mt-7 flex items-center gap-3">
+            {post.authorPhoto && <img src={post.authorPhoto} alt={post.authorName || 'Article author'} width="48" height="48" className="h-12 w-12 rounded-full border border-slate-700 object-cover" />}
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">Written by</p>
+              <p className="text-sm font-semibold text-white">{post.authorName || 'Thukha Aung'}</p>
+            </div>
+          </div>
+        )}
         {post.coverImage && (
           <img src={post.coverImage} alt={post.title} width="1200" height="630" className="mt-10 w-full rounded-2xl border border-slate-800 object-cover" />
         )}
         {post.videoUrl && <video src={post.videoUrl} controls playsInline preload="metadata" className="mt-8 w-full rounded-2xl border border-slate-800" />}
         <div className="mt-12 border-t border-slate-800 pt-10">
-          <RichText content={post.content} />
+          {post.contentBlocks && post.contentBlocks.length > 0
+            ? <StructuredContent blocks={post.contentBlocks} />
+            : <RichText content={post.content} />}
         </div>
       </article>
     </main>
