@@ -18,7 +18,21 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { ArrowLeft, CloudUpload, LogOut, Plus, Save, Trash2 } from 'lucide-react';
+import {
+  AlignLeft,
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  BookOpen,
+  CloudUpload,
+  Heading,
+  ImagePlus,
+  LogOut,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { auth, db, isFirebaseConfigured, storage } from '../firebase';
 import { bundledContent, defaultSiteSettings } from '../content';
 
@@ -79,6 +93,10 @@ const documentTemplates: Record<CollectionId, EditableDocument> = {
     date: '',
     category: '',
     content: '',
+    contentBlocks: [],
+    authorName: 'Thukha Aung',
+    authorPhoto: '',
+    relatedService: '',
     coverImage: '',
     videoUrl: '',
     published: true,
@@ -310,7 +328,7 @@ export default function AdminPanel() {
     setSelected((current) => (current ? { ...current, [key]: value } : current));
   };
 
-  const uploadMedia = (file: File, field: string) => {
+  const uploadMedia = (file: File, field: string, onUploaded?: (url: string) => void) => {
     if (!storage || !selected) return;
     const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
     const objectRef = ref(storage, `portfolio/${activeCollection}/${selected.id}/${Date.now()}-${cleanName}`);
@@ -325,7 +343,9 @@ export default function AdminPanel() {
       },
       async () => {
         const url = await getDownloadURL(task.snapshot.ref);
-        if (field === 'galleryImages') {
+        if (onUploaded) {
+          onUploaded(url);
+        } else if (field === 'galleryImages') {
           setSelected((current) => {
             if (!current) return current;
             const existing = Array.isArray(current.galleryImages)
@@ -471,15 +491,24 @@ export default function AdminPanel() {
 
               {notice && <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs">{notice}</div>}
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                {Object.entries(selected)
-                  .filter(([key]) => !['createdAt', 'updatedAt'].includes(key))
-                  .map(([key, value]) => (
-                    <FieldEditor key={key} fieldKey={key} value={value} onChange={(next) => updateField(key, next)} />
-                  ))}
-              </div>
+              {activeCollection === 'blogPosts' ? (
+                <BlogEditor
+                  document={selected}
+                  updateField={updateField}
+                  uploadMedia={uploadMedia}
+                  uploadProgress={uploadProgress}
+                />
+              ) : (
+                <>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {Object.entries(selected)
+                      .filter(([key]) => !['createdAt', 'updatedAt'].includes(key))
+                      .map(([key, value]) => (
+                        <FieldEditor key={key} fieldKey={key} value={value} onChange={(next) => updateField(key, next)} />
+                      ))}
+                  </div>
 
-              <div className="bg-[#0e1422] border border-slate-800 rounded-xl p-5">
+                  <div className="bg-[#0e1422] border border-slate-800 rounded-xl p-5">
                 <div className="flex gap-2 items-center mb-3">
                   <CloudUpload size={16} className="text-emerald-400" />
                   <h3 className="font-bold text-sm text-white">Image / video upload</h3>
@@ -510,11 +539,318 @@ export default function AdminPanel() {
                   />
                 </div>
                 {uploadProgress !== null && <p className="text-xs text-emerald-400 mt-3">Uploading {uploadProgress}%</p>}
-              </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </main>
       </div>
+    </div>
+  );
+}
+
+type UploadMedia = (
+  file: File,
+  field: string,
+  onUploaded?: (url: string) => void,
+) => void;
+
+type EditorBlock = {
+  id: string;
+  type: 'heading' | 'paragraph' | 'image';
+  content: string;
+  alt?: string;
+};
+
+function BlogEditor({
+  document,
+  updateField,
+  uploadMedia,
+  uploadProgress,
+}: {
+  document: EditableDocument;
+  updateField: (key: string, value: unknown) => void;
+  uploadMedia: UploadMedia;
+  uploadProgress: number | null;
+}) {
+  const blocks = Array.isArray(document.contentBlocks)
+    ? (document.contentBlocks as EditorBlock[])
+    : [];
+
+  const setBlocks = (next: EditorBlock[]) => updateField('contentBlocks', next);
+
+  const addBlock = (type: EditorBlock['type']) => {
+    setBlocks([
+      ...blocks,
+      {
+        id: `${type}-${Date.now()}`,
+        type,
+        content: '',
+        alt: type === 'image' ? '' : undefined,
+      },
+    ]);
+  };
+
+  const updateBlock = (id: string, patch: Partial<EditorBlock>) => {
+    setBlocks(blocks.map((block) => (block.id === id ? { ...block, ...patch } : block)));
+  };
+
+  const moveBlock = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= blocks.length) return;
+    const next = [...blocks];
+    [next[index], next[target]] = [next[target], next[index]];
+    setBlocks(next);
+  };
+
+  const removeBlock = (id: string) => setBlocks(blocks.filter((block) => block.id !== id));
+
+  return (
+    <div className="space-y-7 rounded-2xl border border-slate-800 bg-[#0b111d] p-5 sm:p-7">
+      <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
+        <BookOpen size={20} className="text-indigo-400" />
+        <div>
+          <h3 className="font-bold text-white">Blog Publication Editor</h3>
+          <p className="text-xs text-slate-500">Write, optimize, and publish a complete article.</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <BlogInput label="Article title" value={document.title} onChange={(value) => updateField('title', value)} />
+        <BlogInput label="Friendly URL slug" value={document.slug} placeholder="e.g. secure-firebase-setup" onChange={(value) => updateField('slug', slugify(value))} />
+        <BlogInput label="Category tag" value={document.category} placeholder="SEO & Growth" onChange={(value) => updateField('category', value)} />
+        <label className="space-y-1.5">
+          <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">Status mode</span>
+          <select
+            value={document.published === false ? 'draft' : 'published'}
+            onChange={(event) => updateField('published', event.target.value === 'published')}
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs outline-none focus:border-indigo-500"
+          >
+            <option value="published">Published (Public can read)</option>
+            <option value="draft">Draft (Admin only)</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <ImageUploadCard
+          label="Cover image"
+          value={String(document.coverImage || '')}
+          field="coverImage"
+          uploadMedia={uploadMedia}
+          onClear={() => updateField('coverImage', '')}
+        />
+        <ImageUploadCard
+          label="Social share image (1200×630 recommended)"
+          value={String(document.ogImage || '')}
+          field="ogImage"
+          uploadMedia={uploadMedia}
+          onClear={() => updateField('ogImage', '')}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <BlogInput label="Author name" value={document.authorName} onChange={(value) => updateField('authorName', value)} />
+        <ImageUploadCard
+          label="Author photo"
+          value={String(document.authorPhoto || '')}
+          field="authorPhoto"
+          compact
+          uploadMedia={uploadMedia}
+          onClear={() => updateField('authorPhoto', '')}
+        />
+      </div>
+
+      <label className="block space-y-1.5">
+        <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">Short excerpt summary (1–2 sentences)</span>
+        <textarea
+          value={String(document.excerpt || '')}
+          onChange={(event) => updateField('excerpt', event.target.value)}
+          rows={3}
+          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs outline-none focus:border-indigo-500"
+        />
+      </label>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <BlogInput label="Read time" value={document.readTime} placeholder="6 min read" onChange={(value) => updateField('readTime', value)} />
+        <BlogInput label="Date" value={document.date} placeholder="June 21, 2026" onChange={(value) => updateField('date', value)} />
+        <BlogInput label="Related service" value={document.relatedService} placeholder="No related service" onChange={(value) => updateField('relatedService', value)} />
+      </div>
+
+      <section className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-mono uppercase text-slate-500">Article content</p>
+            <p className="mt-1 text-xs text-slate-600">Build the article with reorderable content blocks.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => addBlock('heading')} className="editor-action"><Heading size={14} /> Heading</button>
+            <button type="button" onClick={() => addBlock('paragraph')} className="editor-action"><AlignLeft size={14} /> Text</button>
+            <button type="button" onClick={() => addBlock('image')} className="editor-action editor-action-primary"><ImagePlus size={14} /> Image</button>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {blocks.length === 0 && (
+            <button
+              type="button"
+              onClick={() => addBlock('paragraph')}
+              className="w-full rounded-xl border border-dashed border-slate-700 px-5 py-10 text-xs text-slate-500 hover:border-indigo-500 hover:text-indigo-300"
+            >
+              Add your first content block
+            </button>
+          )}
+
+          {blocks.map((block, index) => (
+            <div key={block.id} className="rounded-xl border border-slate-800 bg-[#080c14] p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-slate-500">{block.type}</span>
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => moveBlock(index, -1)} disabled={index === 0} className="block-icon"><ArrowUp size={14} /></button>
+                  <button type="button" onClick={() => moveBlock(index, 1)} disabled={index === blocks.length - 1} className="block-icon"><ArrowDown size={14} /></button>
+                  <button type="button" onClick={() => removeBlock(block.id)} className="block-icon text-red-400"><Trash2 size={14} /></button>
+                </div>
+              </div>
+
+              {block.type === 'heading' && (
+                <input
+                  value={block.content}
+                  onChange={(event) => updateBlock(block.id, { content: event.target.value })}
+                  placeholder="Section heading"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-sm font-bold text-white outline-none focus:border-indigo-500"
+                />
+              )}
+              {block.type === 'paragraph' && (
+                <textarea
+                  value={block.content}
+                  onChange={(event) => updateBlock(block.id, { content: event.target.value })}
+                  placeholder="Write paragraph text..."
+                  rows={7}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs leading-6 outline-none focus:border-indigo-500"
+                />
+              )}
+              {block.type === 'image' && (
+                <div className="space-y-3">
+                  {block.content && <img src={block.content} alt={block.alt || 'Article content'} className="max-h-64 w-full rounded-lg object-cover" />}
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="text-xs text-slate-400"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) uploadMedia(file, 'contentBlocks', (url) => updateBlock(block.id, { content: url }));
+                      }}
+                    />
+                    <input
+                      value={block.alt || ''}
+                      onChange={(event) => updateBlock(block.id, { alt: event.target.value })}
+                      placeholder="Image alt text for SEO"
+                      className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 sm:p-5">
+        <h4 className="text-xs font-bold uppercase tracking-wide text-white">Search & social metadata</h4>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <BlogInput label="Custom SEO title" value={document.seoTitle} onChange={(value) => updateField('seoTitle', value)} />
+          <BlogInput label="Canonical URL" value={document.canonicalUrl} placeholder="Auto-generated if empty" onChange={(value) => updateField('canonicalUrl', value)} />
+          <label className="space-y-1.5 sm:col-span-2">
+            <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">Custom SEO description</span>
+            <textarea value={String(document.seoDescription || '')} onChange={(event) => updateField('seoDescription', event.target.value)} rows={3} className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs outline-none focus:border-indigo-500" />
+          </label>
+          <label className="space-y-1.5 sm:col-span-2">
+            <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">SEO keywords — one per line</span>
+            <textarea
+              value={Array.isArray(document.seoKeywords) ? (document.seoKeywords as string[]).join('\n') : ''}
+              onChange={(event) => updateField('seoKeywords', event.target.value.split('\n').map((item) => item.trim()).filter(Boolean))}
+              rows={4}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs outline-none focus:border-indigo-500"
+            />
+          </label>
+        </div>
+      </section>
+
+      {uploadProgress !== null && (
+        <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/10 p-3 text-xs text-indigo-300">
+          Uploading {uploadProgress}%
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BlogInput({
+  label,
+  value,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: unknown;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-1.5">
+      <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{label}</span>
+      <input
+        value={String(value || '')}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs outline-none focus:border-indigo-500"
+      />
+    </label>
+  );
+}
+
+function ImageUploadCard({
+  label,
+  value,
+  field,
+  compact = false,
+  uploadMedia,
+  onClear,
+}: {
+  label: string;
+  value: string;
+  field: string;
+  compact?: boolean;
+  uploadMedia: UploadMedia;
+  onClear: () => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <span className="text-[10px] font-mono uppercase tracking-wide text-slate-500">{label}</span>
+      <div className={`relative flex items-center gap-3 rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/5 p-3 ${compact ? 'min-h-20' : 'min-h-28'}`}>
+        {value && <img src={value} alt="" className={`${compact ? 'h-14 w-14' : 'h-20 w-24'} rounded-lg border border-slate-700 object-cover`} />}
+        <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/10">
+          <CloudUpload size={17} />
+          {value ? 'Change image' : 'Choose image'}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) uploadMedia(file, field);
+            }}
+          />
+        </label>
+        {value && (
+          <button type="button" onClick={onClear} className="absolute right-2 top-2 rounded-full bg-slate-950 p-1 text-slate-500 hover:text-red-400">
+            <X size={13} />
+          </button>
+        )}
+      </div>
+      <p className="text-[10px] text-slate-600">JPG, PNG or WebP. Keep images optimized.</p>
     </div>
   );
 }
