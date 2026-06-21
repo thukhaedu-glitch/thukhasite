@@ -483,13 +483,13 @@ export default function App() {
                       Ops Optimized
                     </span>
                   </div>
-                  <button 
-                    onClick={() => setSelectedProject(project)}
+                  <a 
+                    href={`/case-study/${encodeURIComponent(project.id)}`}
                     className="text-[10px] font-mono font-bold uppercase text-white hover:text-brand-emerald transition-colors flex items-center space-x-1 p-1 focus:outline-none"
                   >
                     <span>Read Study</span>
                     <ArrowUpRight size={12} />
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
@@ -973,13 +973,13 @@ export default function App() {
 
                 <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
                   <span className="text-slate-500 font-mono">{post.date}</span>
-                  <button 
-                    onClick={() => setSelectedBlogPost(post)}
+                  <a 
+                    href={`/blog/${encodeURIComponent(post.slug)}`}
                     className="flex items-center space-x-1 font-mono font-bold uppercase text-white hover:text-[#10b981] transition-all cursor-pointer focus:outline-none"
                   >
                     <span>Read Insights</span>
                     <ChevronRight size={12} />
-                  </button>
+                  </a>
                 </div>
               </div>
             ))}
