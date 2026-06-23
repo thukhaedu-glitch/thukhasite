@@ -7,36 +7,107 @@ import { BlogContentBlock, BlogPost, Project, SeoFields } from '../types';
 
 const SITE_URL = 'https://www.thukhaaung.me';
 
+type ParsedBlock =
+  | { kind: 'heading'; text: string }
+  | { kind: 'ul'; items: string[] }
+  | { kind: 'ol'; items: string[] }
+  | { kind: 'p'; text: string };
+
+// Phrases that read like section titles even without markdown markers.
+const HEADING_HINTS =
+  /^(understanding|benefits of|why |what |how |which |the answer|choose|conclusion|final thoughts|frequently asked|important pages|key takeaways)/i;
+
+function looksLikeHeading(line: string) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  if (/^#{1,4}\s/.test(trimmed)) return true; // markdown heading
+  const isShort = trimmed.length <= 70 && trimmed.split(/\s+/).length <= 9;
+  const noEndPunctuation = !/[.,:;]$/.test(trimmed);
+  return isShort && noEndPunctuation && HEADING_HINTS.test(trimmed);
+}
+
+function parseContent(content: string): ParsedBlock[] {
+  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  const blocks: ParsedBlock[] = [];
+  let listBuffer: string[] | null = null;
+  let listKind: 'ul' | 'ol' = 'ul';
+
+  const flushList = () => {
+    if (listBuffer && listBuffer.length) {
+      blocks.push({ kind: listKind, items: listBuffer });
+    }
+    listBuffer = null;
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) {
+      flushList();
+      continue;
+    }
+    if (/^[*-]\s+/.test(line)) {
+      if (!listBuffer || listKind !== 'ul') {
+        flushList();
+        listBuffer = [];
+        listKind = 'ul';
+      }
+      listBuffer.push(line.replace(/^[*-]\s+/, ''));
+      continue;
+    }
+    if (/^\d+[.)]\s+/.test(line)) {
+      if (!listBuffer || listKind !== 'ol') {
+        flushList();
+        listBuffer = [];
+        listKind = 'ol';
+      }
+      listBuffer.push(line.replace(/^\d+[.)]\s+/, ''));
+      continue;
+    }
+    flushList();
+    if (looksLikeHeading(line)) {
+      blocks.push({ kind: 'heading', text: line.replace(/^#{1,4}\s*/, '') });
+    } else {
+      blocks.push({ kind: 'p', text: line });
+    }
+  }
+  flushList();
+  return blocks;
+}
+
 function RichText({ content }: { content: string }) {
+  const blocks = parseContent(content || '');
   return (
-    <div className="space-y-5 text-sm sm:text-base leading-7 text-slate-300">
-      {content.split('\n\n').map((paragraph, index) => {
-        if (paragraph.startsWith('###')) {
+    <div className="space-y-6 text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+      {blocks.map((block, index) => {
+        if (block.kind === 'heading') {
           return (
-            <h2 key={index} className="pt-4 text-xl font-bold text-white">
-              {paragraph.replace(/^###\s*/, '')}
+            <h2
+              key={index}
+              className="pt-6 text-xl font-bold leading-snug text-white sm:text-2xl"
+            >
+              {renderInline(block.text)}
             </h2>
           );
         }
-        if (paragraph.startsWith('*') || paragraph.startsWith('-')) {
+        if (block.kind === 'ul') {
           return (
-            <ul key={index} className="list-disc space-y-2 pl-6">
-              {paragraph.split('\n').map((line, lineIndex) => (
-                <li key={lineIndex}>{renderInline(line.replace(/^[\s*-]+/, ''))}</li>
+            <ul key={index} className="list-disc space-y-2 pl-6 marker:text-emerald-400">
+              {block.items.map((item, i) => (
+                <li key={i}>{renderInline(item)}</li>
               ))}
             </ul>
           );
         }
-        if (/^\d+\./.test(paragraph)) {
+        if (block.kind === 'ol') {
           return (
-            <ol key={index} className="list-decimal space-y-2 pl-6">
-              {paragraph.split('\n').map((line, lineIndex) => (
-                <li key={lineIndex}>{renderInline(line.replace(/^\d+\.\s*/, ''))}</li>
+            <ol key={index} className="list-decimal space-y-2 pl-6 marker:text-emerald-400">
+              {block.items.map((item, i) => (
+                <li key={i}>{renderInline(item)}</li>
               ))}
             </ol>
           );
         }
-        return <p key={index}>{renderInline(paragraph)}</p>;
+        return <p key={index}>{renderInline(block.text)}</p>;
       })}
     </div>
   );
@@ -56,14 +127,21 @@ function renderInline(text: string) {
 
 function StructuredContent({ blocks }: { blocks: BlogContentBlock[] }) {
   return (
-    <div className="space-y-7 text-sm leading-7 text-slate-300 sm:text-base">
+    <div className="space-y-6 text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
       {blocks.map((block) => {
         if (block.type === 'heading') {
-          return <h2 key={block.id} className="pt-4 text-2xl font-bold text-white">{block.content}</h2>;
+          return (
+            <h2
+              key={block.id}
+              className="pt-6 text-xl font-bold leading-snug text-white sm:text-2xl"
+            >
+              {renderInline(block.content)}
+            </h2>
+          );
         }
         if (block.type === 'image') {
           return (
-            <figure key={block.id} className="space-y-2">
+            <figure key={block.id} className="space-y-2 py-2">
               <img src={block.content} alt={block.alt || 'Article illustration'} loading="lazy" width="1200" height="800" className="w-full rounded-2xl border border-slate-800 object-cover" />
               {block.alt && <figcaption className="text-center text-xs text-slate-500">{block.alt}</figcaption>}
             </figure>
