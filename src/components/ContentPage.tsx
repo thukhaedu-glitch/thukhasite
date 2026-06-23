@@ -26,8 +26,67 @@ function looksLikeHeading(line: string) {
   return isShort && noEndPunctuation && HEADING_HINTS.test(trimmed);
 }
 
+// Curated heading phrases that commonly appear inside a flat blob of text.
+// Each becomes a section heading. Add your own recurring section titles here.
+const EMBEDDED_HEADINGS = [
+  'Why a Website Is Important for Myanmar Businesses',
+  'Why a Website Is Important',
+  'A Website Helps Customers Trust Your Business',
+  'Facebook Page Alone Is Not Enough',
+  'Website Development Helps You Rank on Google',
+  'What a Good Business Website Should Include',
+  'Website Development Cost in Myanmar',
+  'Important Pages',
+  'Final Thoughts',
+  'Frequently Asked Questions',
+  'Conclusion',
+  'Key Takeaways',
+  'Understanding Facebook Marketing',
+  'Understanding Google Ads',
+  'Benefits of Facebook Marketing',
+  'Benefits of Google Ads',
+  'Which Platform Is Better',
+  'Choose Facebook Marketing If',
+  'Choose Google Ads If',
+];
+
+// When the stored content has no line breaks at all, rebuild structure:
+// insert a line break before each known heading phrase, then break long
+// runs of prose into paragraphs at sentence boundaries (~3 sentences each).
+function restructureFlatText(text: string): string {
+  let out = text.replace(/\s+/g, ' ').trim();
+
+  // 1. Put each known heading phrase on its own line, marked with ##.
+  //    Longest phrases first so an overlapping shorter phrase can't split it.
+  const sorted = [...EMBEDDED_HEADINGS].sort((a, b) => b.length - a.length);
+  const escaped = sorted.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const headingRe = new RegExp(`\\s*(${escaped.join('|')})\\s*`, 'g');
+  out = out.replace(headingRe, (_match, phrase) => `\n\n## ${phrase}\n\n`);
+
+  // 2. Break remaining long paragraphs into ~3-sentence chunks.
+  const segments = out.split('\n\n');
+  const rebuilt = segments.map((segment) => {
+    const seg = segment.trim();
+    if (!seg || seg.startsWith('##')) return seg;
+    const sentences = seg.match(/[^.!?]+[.!?]+(?:\s|$)|[^.!?]+$/g) || [seg];
+    const paras: string[] = [];
+    for (let i = 0; i < sentences.length; i += 3) {
+      paras.push(sentences.slice(i, i + 3).join(' ').trim());
+    }
+    return paras.join('\n\n');
+  });
+
+  return rebuilt.filter(Boolean).join('\n\n');
+}
+
 function parseContent(content: string): ParsedBlock[] {
-  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  let source = content.replace(/\r\n/g, '\n');
+  // If the content is effectively one unbroken blob, rebuild its structure.
+  const nonEmptyLines = source.split('\n').filter((l) => l.trim()).length;
+  if (nonEmptyLines <= 2 && source.length > 400) {
+    source = restructureFlatText(source);
+  }
+  const lines = source.split('\n');
   const blocks: ParsedBlock[] = [];
   let listBuffer: string[] | null = null;
   let listKind: 'ul' | 'ol' = 'ul';
