@@ -587,7 +587,7 @@ function BlogEditor({
         id: `${type}-${Date.now()}`,
         type,
         content: '',
-        alt: type === 'image' ? '' : undefined,
+        ...(type === 'image' ? { alt: '' } : {}),
       },
     ]);
   };
