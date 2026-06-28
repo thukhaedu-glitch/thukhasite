@@ -206,7 +206,7 @@ function StructuredContent({ blocks }: { blocks: BlogContentBlock[] }) {
             </figure>
           );
         }
-        return <p key={block.id}>{renderInline(block.content)}</p>;
+        return <RichText key={block.id} content={block.content} />;
       })}
     </div>
   );
