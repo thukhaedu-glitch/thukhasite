@@ -27,6 +27,8 @@ import {
   CloudUpload,
   Heading,
   ImagePlus,
+  List,
+  ListOrdered,
   LogOut,
   Plus,
   Save,
@@ -558,7 +560,7 @@ type UploadMedia = (
 
 type EditorBlock = {
   id: string;
-  type: 'heading' | 'paragraph' | 'image';
+  type: 'heading' | 'paragraph' | 'bullet-list' | 'numbered-list' | 'image';
   content: string;
   alt?: string;
 };
@@ -687,6 +689,8 @@ function BlogEditor({
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => addBlock('heading')} className="editor-action"><Heading size={14} /> Heading</button>
             <button type="button" onClick={() => addBlock('paragraph')} className="editor-action"><AlignLeft size={14} /> Text</button>
+            <button type="button" onClick={() => addBlock('bullet-list')} className="editor-action"><List size={14} /> Bullets</button>
+            <button type="button" onClick={() => addBlock('numbered-list')} className="editor-action"><ListOrdered size={14} /> Numbered</button>
             <button type="button" onClick={() => addBlock('image')} className="editor-action editor-action-primary"><ImagePlus size={14} /> Image</button>
           </div>
         </div>
@@ -727,6 +731,15 @@ function BlogEditor({
                   onChange={(event) => updateBlock(block.id, { content: event.target.value })}
                   placeholder="Write paragraph text..."
                   rows={7}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs leading-6 outline-none focus:border-indigo-500"
+                />
+              )}
+              {(block.type === 'bullet-list' || block.type === 'numbered-list') && (
+                <textarea
+                  value={block.content}
+                  onChange={(event) => updateBlock(block.id, { content: event.target.value })}
+                  placeholder={'Write one list item per line...\nSecond item\nThird item'}
+                  rows={6}
                   className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-3 text-xs leading-6 outline-none focus:border-indigo-500"
                 />
               )}
