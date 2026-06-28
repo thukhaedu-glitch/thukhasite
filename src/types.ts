@@ -83,11 +83,15 @@ export interface Certification extends CmsFields {
 
 export interface BlogContentBlock {
   id: string;
-  type: 'heading' | 'paragraph' | 'image';
+  type:
+    | 'heading'
+    | 'paragraph'
+    | 'bullet-list'
+    | 'numbered-list'
+    | 'image';
   content: string;
   alt?: string;
 }
-
 export interface BlogPost extends CmsFields {
   id: string;
   title: string;
