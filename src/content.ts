@@ -37,7 +37,7 @@ export const defaultSiteSettings: SiteSettings = {
     'Noon GCC',
     'performance marketing',
   ],
-  defaultOgImage: 'https://www.thukhaaung.me/social-share.webp',
+  defaultOgImage: 'https://www.thukhaaung.me/thukha-aung-profile.webp',
 };
 
 export interface PortfolioContent {
