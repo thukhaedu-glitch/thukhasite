@@ -1,3 +1,53 @@
+const SITE_URL = 'https://www.thukhaaung.me';
+
+type FirestoreValue = {
+  stringValue?: string;
+  booleanValue?: boolean;
+  timestampValue?: string;
+};
+
+type FirestoreDocument = {
+  fields?: Record<string, FirestoreValue>;
+};
+
+type QueryResult = {
+  document?: FirestoreDocument;
+};
+
+type SitemapPost = {
+  slug: string;
+  title: string;
+  lastmod: string;
+  image?: string;
+};
+
+const FALLBACK_POSTS: SitemapPost[] = [
+  {
+    slug: 'amazon-uae-seo-guide',
+    title: 'Amazon UAE and KSA SEO Guide',
+    lastmod: '2026-06-18',
+  },
+  {
+    slug: 'noon-pricing-strategy-gcc',
+    title: 'Noon Pricing Strategy GCC',
+    lastmod: '2026-06-12',
+  },
+  {
+    slug: 'ecommerce-reporting-dashboard',
+    title: 'Ecommerce Reporting Dashboard',
+    lastmod: '2026-05-28',
+  },
+  {
+    slug: 'amazon-ppc-tips-skincare',
+    title: 'Amazon PPC Tips for Skincare',
+    lastmod: '2026-04-15',
+  },
+  {
+    slug: 'website-development-myanmar-business-website-2026',
+    title: 'Website Development Myanmar: Why Every Business Needs a Professional Website in 2026',
+    lastmod: '2026-06-28',
+  },
+];
 
 function escapeXml(value: string) {
   return value
@@ -129,23 +179,21 @@ ${blogEntries}
 </urlset>`;
 }
 
-export default {
-  async fetch(_request: Request) {
-    let posts = FALLBACK_POSTS;
+export async function GET(_request: Request) {
+  let posts = FALLBACK_POSTS;
 
-    try {
-      posts = await getPublishedPosts();
-    } catch (error) {
-      console.error('Unable to build sitemap.', error);
-    }
+  try {
+    posts = await getPublishedPosts();
+  } catch (error) {
+    console.error('Unable to build sitemap.', error);
+  }
 
-    return new Response(createSitemap(posts), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control':
-          'public, s-maxage=300, stale-while-revalidate=86400',
-      },
-    });
-  },
-};
+  return new Response(createSitemap(posts), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control':
+        'public, s-maxage=300, stale-while-revalidate=86400',
+    },
+  });
+}
