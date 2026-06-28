@@ -32,17 +32,17 @@ export const defaultSiteSettings: SiteSettings = {
   defaultOgImage: 'https://www.thukhaaung.me/social-share.webp',
 };
 
-export interface PortfolioContent {
-  projects: Project[];
-  creativeItems: CreativeItem[];
-  websites: WebsiteShowcase[];
-  ventures: BusinessVenture[];
-  volunteering: VolunteeringExp[];
-  certifications: Certification[];
-  blogPosts: BlogPost[];
-  settings: SiteSettings;
-  loading: boolean;
-}
+const fallbackContent: PortfolioContent = {
+  projects: projectsData,
+  creativeItems: creativeItemsData,
+  websites: websitesData,
+  ventures: venturesData,
+  volunteering: volunteeringData,
+  certifications: certificationsData,
+  blogPosts: blogPostsData,
+  settings: defaultSiteSettings,
+  loading: false,
+};
 
 const isFirebaseConfigured = [
   import.meta.env.VITE_FIREBASE_API_KEY,
