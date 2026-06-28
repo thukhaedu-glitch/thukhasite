@@ -1,9 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+>
   <url>
     <loc>https://www.thukhaaung.me/</loc>
-    <lastmod>2026-06-21</lastmod>
+    <lastmod>2026-06-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+
+    <image:image>
+      <image:loc>https://www.thukhaaung.me/thukha-aung-profile.webp</image:loc>
+      <image:title>Thukha Aung — Growth and Ecommerce Specialist</image:title>
+      <image:caption>Official profile photo of Thukha Aung</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.thukhaaung.me/blog/amazon-uae-seo-guide</loc>
+    <lastmod>2026-06-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.thukhaaung.me/blog/noon-pricing-strategy-gcc</loc>
+    <lastmod>2026-06-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.thukhaaung.me/blog/ecommerce-reporting-dashboard</loc>
+    <lastmod>2026-05-28</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.thukhaaung.me/blog/amazon-ppc-tips-skincare</loc>
+    <lastmod>2026-04-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
