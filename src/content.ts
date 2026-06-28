@@ -22,27 +22,35 @@ import {
 export const defaultSiteSettings: SiteSettings = {
   id: 'main',
   siteName: 'Thukha Aung — Growth & Ecommerce Specialist',
-  tagline: 'Growth, ecommerce operations, performance marketing and digital experiences.',
+  tagline:
+    'Growth, ecommerce operations, performance marketing and digital experiences.',
   author: 'Thukha Aung',
   siteUrl: 'https://www.thukhaaung.me/',
   seoTitle: 'Thukha Aung | Growth & Ecommerce Specialist',
   seoDescription:
     'Portfolio of Thukha Aung, a growth and ecommerce specialist focused on Amazon, Noon GCC, performance marketing and digital experiences.',
-  seoKeywords: ['growth specialist', 'ecommerce specialist', 'Amazon UAE', 'Noon GCC', 'performance marketing'],
+  seoKeywords: [
+    'Thukha Aung',
+    'growth specialist',
+    'ecommerce specialist',
+    'Amazon UAE',
+    'Noon GCC',
+    'performance marketing',
+  ],
   defaultOgImage: 'https://www.thukhaaung.me/social-share.webp',
 };
 
-const fallbackContent: PortfolioContent = {
-  projects: projectsData,
-  creativeItems: creativeItemsData,
-  websites: websitesData,
-  ventures: venturesData,
-  volunteering: volunteeringData,
-  certifications: certificationsData,
-  blogPosts: blogPostsData,
-  settings: defaultSiteSettings,
-  loading: false,
-};
+export interface PortfolioContent {
+  projects: Project[];
+  creativeItems: CreativeItem[];
+  websites: WebsiteShowcase[];
+  ventures: BusinessVenture[];
+  volunteering: VolunteeringExp[];
+  certifications: Certification[];
+  blogPosts: BlogPost[];
+  settings: SiteSettings;
+  loading: boolean;
+}
 
 const isFirebaseConfigured = [
   import.meta.env.VITE_FIREBASE_API_KEY,
@@ -54,13 +62,13 @@ const isFirebaseConfigured = [
 ].every(Boolean);
 
 const fallbackContent: PortfolioContent = {
-  projects: [],
+  projects: projectsData,
   creativeItems: creativeItemsData,
   websites: websitesData,
   ventures: venturesData,
   volunteering: volunteeringData,
   certifications: certificationsData,
-  blogPosts: [],
+  blogPosts: blogPostsData,
   settings: defaultSiteSettings,
   loading: false,
 };
@@ -80,28 +88,56 @@ export function usePortfolioContent(): PortfolioContent {
 
     const connect = async () => {
       if (!isFirebaseConfigured) return;
+
       const [{ db }, firestore] = await Promise.all([
         import('./firebase'),
         import('firebase/firestore'),
       ]);
+
       if (!db || cancelled) return;
 
       const { collection, doc, onSnapshot, query, where } = firestore;
-      const bindCollection = <T extends { id: string; published?: boolean; order?: number }>(
+
+      const bindCollection = <
+        T extends {
+          id: string;
+          published?: boolean;
+          order?: number;
+        },
+      >(
         collectionName: string,
         key: keyof Omit<PortfolioContent, 'settings' | 'loading'>,
       ) => {
-        const contentQuery = query(collection(db, collectionName), where('published', '==', true));
+        const contentQuery = query(
+          collection(db, collectionName),
+          where('published', '==', true),
+        );
+
         subscriptions.push(
           onSnapshot(
             contentQuery,
             (snapshot) => {
-              const items = snapshot.docs.map((item) => ({ id: item.id, ...item.data() })) as T[];
-              setContent((current) => ({ ...current, [key]: sortLocally(items), loading: false }));
+              const items = snapshot.docs.map((item) => ({
+                id: item.id,
+                ...item.data(),
+              })) as T[];
+
+              setContent((current) => ({
+                ...current,
+                [key]: sortLocally(items),
+                loading: false,
+              }));
             },
             (error) => {
-              console.warn(`Unable to load ${collectionName}; using bundled fallback content.`, error);
-              setContent((current) => ({ ...current, loading: false }));
+              console.warn(
+                `Unable to load ${collectionName}; using bundled fallback content.`,
+                error,
+              );
+
+              setContent((current) => ({
+                ...current,
+                loading: false,
+              }));
             },
           ),
         );
@@ -122,20 +158,33 @@ export function usePortfolioContent(): PortfolioContent {
             if (snapshot.exists()) {
               setContent((current) => ({
                 ...current,
-                settings: { ...defaultSiteSettings, ...snapshot.data(), id: 'main' },
+                settings: {
+                  ...defaultSiteSettings,
+                  ...snapshot.data(),
+                  id: 'main',
+                },
                 loading: false,
               }));
             }
           },
-          (error) => console.warn('Unable to load site settings.', error),
+          (error) => {
+            console.warn('Unable to load site settings.', error);
+          },
         ),
       );
     };
 
     const connectTimer = window.setTimeout(() => {
       connect().catch((error) => {
-        console.warn('Unable to initialize Firebase; using bundled content.', error);
-        setContent((current) => ({ ...current, loading: false }));
+        console.warn(
+          'Unable to initialize Firebase; using bundled content.',
+          error,
+        );
+
+        setContent((current) => ({
+          ...current,
+          loading: false,
+        }));
       });
     }, 1200);
 
