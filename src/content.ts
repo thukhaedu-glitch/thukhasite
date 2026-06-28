@@ -174,23 +174,21 @@ export function usePortfolioContent(): PortfolioContent {
       );
     };
 
-    const connectTimer = window.setTimeout(() => {
-      connect().catch((error) => {
-        console.warn(
-          'Unable to initialize Firebase; using bundled content.',
-          error,
-        );
+  connect().catch((error) => {
+  console.warn(
+    'Unable to initialize Firebase; using bundled content.',
+    error,
+  );
 
-        setContent((current) => ({
-          ...current,
-          loading: false,
-        }));
-      });
-    }, 1200);
+  setContent((current) => ({
+    ...current,
+    loading: false,
+  }));
+});
 
     return () => {
       cancelled = true;
-      window.clearTimeout(connectTimer);
+ 
       subscriptions.forEach((unsubscribe) => unsubscribe());
     };
   }, []);
